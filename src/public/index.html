@@ -1,0 +1,1236 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ZOMBIE IMBOVIY</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body { 
+            margin: 0; 
+            overflow: hidden; 
+            background: #000; 
+            font-family: 'Arial', sans-serif; 
+            color: white;
+        }
+        
+        #game {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        #ui { 
+            position: absolute; 
+            top: 10px; 
+            left: 10px; 
+            background: rgba(0,0,0,0.8); 
+            padding: 15px; 
+            border-radius: 15px; 
+            border: 3px solid #ffaa00; 
+            z-index: 10;
+            min-width: 250px;
+        }
+        
+        #day-night {
+            font-size: 20px;
+            color: #ffaa00;
+            margin-bottom: 10px;
+        }
+        
+        .stat-row {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+            gap: 10px;
+        }
+        
+        .stat-bar {
+            flex: 1;
+            height: 20px;
+            background: #333;
+            border: 2px solid #000;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .stat-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #f00, #ff0, #0f0);
+            border-radius: 8px;
+            transition: width 0.2s;
+        }
+        
+        #zombie-count {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.8);
+            padding: 10px 20px;
+            border-radius: 30px;
+            border: 3px solid #f00;
+            font-size: 24px;
+            color: #f00;
+        }
+        
+        #inventory {
+            position: absolute;
+            bottom: 120px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 5px;
+            background: rgba(0,0,0,0.8);
+            padding: 10px;
+            border-radius: 20px;
+            border: 3px solid #ffaa00;
+            z-index: 20;
+        }
+        
+        .slot {
+            width: 70px;
+            height: 70px;
+            background: rgba(255,255,255,0.1);
+            border: 2px solid #ffaa00;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            position: relative;
+            cursor: pointer;
+        }
+        
+        .slot.selected {
+            border-color: #00ffff;
+            box-shadow: 0 0 20px #00ffff;
+            transform: scale(1.05);
+        }
+        
+        .slot-count {
+            position: absolute;
+            bottom: 2px;
+            right: 5px;
+            font-size: 14px;
+            background: #ffaa00;
+            color: black;
+            padding: 2px 5px;
+            border-radius: 10px;
+        }
+        
+        #craft-menu {
+            position: absolute;
+            bottom: 120px;
+            right: 10px;
+            background: rgba(0,0,0,0.9);
+            padding: 15px;
+            border-radius: 20px;
+            border: 3px solid #ffaa00;
+            width: 280px;
+            z-index: 20;
+        }
+        
+        .craft-title {
+            color: #ffaa00;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 20px;
+        }
+        
+        .craft-item {
+            background: rgba(255,255,255,0.1);
+            padding: 8px;
+            margin: 5px 0;
+            border-radius: 10px;
+            border: 2px solid #ffaa00;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        #build-menu {
+            position: absolute;
+            bottom: 120px;
+            left: 10px;
+            background: rgba(0,0,0,0.9);
+            padding: 15px;
+            border-radius: 20px;
+            border: 3px solid #00ff00;
+            width: 280px;
+            z-index: 20;
+        }
+        
+        .build-title {
+            color: #00ff00;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 20px;
+        }
+        
+        .build-item {
+            background: rgba(255,255,255,0.1);
+            padding: 8px;
+            margin: 5px 0;
+            border-radius: 10px;
+            border: 2px solid #00ff00;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        #chat-container {
+            position: absolute;
+            bottom: 250px;
+            left: 10px;
+            width: 300px;
+            background: rgba(0,0,0,0.8);
+            border: 3px solid #ff44ff;
+            border-radius: 15px;
+            padding: 10px;
+            z-index: 30;
+        }
+        
+        #chat-messages {
+            height: 150px;
+            overflow-y: auto;
+            margin-bottom: 10px;
+            padding: 5px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+        }
+        
+        .chat-message {
+            margin: 5px 0;
+            padding: 3px;
+            border-bottom: 1px solid #444;
+        }
+        
+        #chat-input {
+            width: 100%;
+            padding: 8px;
+            border-radius: 10px;
+            border: 2px solid #ff44ff;
+            background: #222;
+            color: white;
+        }
+        
+        #controls { 
+            position: absolute; 
+            bottom: 10px; 
+            width: 100%; 
+            display: flex; 
+            justify-content: space-between; 
+            padding: 0 15px; 
+            z-index: 20; 
+            pointer-events: none;
+        }
+        
+        #controls > div {
+            pointer-events: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .btn { 
+            width: 70px; 
+            height: 70px; 
+            background: #ff4444; 
+            border: 3px solid #ffff00; 
+            border-radius: 35px; 
+            color: white; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 30px; 
+            box-shadow: 0 5px 0 #880000; 
+        }
+        
+        .btn:active { 
+            transform: translateY(5px);
+            box-shadow: none;
+        }
+        
+        #gas-btn {
+            background: #44ff44;
+            box-shadow: 0 5px 0 #008800;
+        }
+        
+        #back-btn {
+            background: #ffaa44;
+            box-shadow: 0 5px 0 #885500;
+        }
+        
+        #fire-btn {
+            background: #ff0000;
+            box-shadow: 0 5px 0 #880000;
+        }
+        
+        #chat-btn {
+            background: #ff44ff;
+            box-shadow: 0 5px 0 #880088;
+        }
+        
+        #build-btn {
+            background: #00ff00;
+            box-shadow: 0 5px 0 #008800;
+        }
+        
+        #death-screen { 
+            position: absolute; 
+            top:0; 
+            left:0; 
+            width:100%; 
+            height:100%; 
+            display: none; 
+            flex-direction: column;
+            align-items: center; 
+            justify-content: center; 
+            z-index:200; 
+            background: rgba(0,0,0,0.9); 
+            color:white; 
+            font-size: 60px; 
+        }
+        
+        #restart-btn {
+            padding: 15px 50px;
+            background: #00ff00;
+            border: 4px solid #ffff00;
+            border-radius: 40px;
+            font-size: 30px;
+            margin-top: 30px;
+            cursor: pointer;
+            color: black;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div id="game">
+        <div id="ui">
+            <div id="day-night">☀️ ДЕНЬ 1 | 12:00</div>
+            <div class="stat-row">
+                <span>❤️</span>
+                <div class="stat-bar"><div id="hp-fill" class="stat-fill" style="width:100%"></div></div>
+                <span id="hp-text">100</span>
+            </div>
+            <div class="stat-row">
+                <span>🍗</span>
+                <div class="stat-bar"><div id="hunger-fill" class="stat-fill" style="background:#ffaa00; width:100%"></div></div>
+                <span id="hunger-text">100</span>
+            </div>
+        </div>
+
+        <div id="zombie-count">🧟 0</div>
+
+        <div id="inventory"></div>
+
+        <div id="craft-menu">
+            <div class="craft-title">🔨 КРАФТ ОРУЖИЯ</div>
+            <div class="craft-item" onclick="craftItem('bat')">🪓 БИТА (2 дер + 1 гв)</div>
+            <div class="craft-item" onclick="craftItem('molotov')">🔥 МОЛОТОВ (1 бут + 1 бенз)</div>
+            <div class="craft-item" onclick="craftItem('medkit')">💊 АПТЕЧКА (2 бинт + 1 спирт)</div>
+            <div class="craft-item" onclick="craftItem('shotgun')">🔫 ДРОБОВИК (10 дер + 5 гв + 2 бенз)</div>
+            <div class="craft-item" onclick="craftItem('rifle')">🔥 АВТОМАТ (15 дер + 8 гв + 3 бенз)</div>
+            <div class="craft-item" onclick="craftItem('chainsaw')">⛓️ БЕНЗОПИЛА (20 дер + 10 гв + 5 бенз)</div>
+        </div>
+
+        <div id="build-menu">
+            <div class="build-title">🏗️ ПОСТРОЙКИ</div>
+            <div class="build-item" onclick="buildItem('wall')">🧱 СТЕНА (5 дер)</div>
+            <div class="build-item" onclick="buildItem('trap')">⚡ ЛОВУШКА (3 дер + 2 гв)</div>
+            <div class="build-item" onclick="buildItem('farm')">🌱 ФЕРМА (10 дер + 5 гв)</div>
+            <div class="build-item" onclick="buildItem('turret')">🔫 ТУРЕЛЬ (20 дер + 10 гв + 5 бенз)</div>
+        </div>
+
+        <div id="chat-container" style="display:none;">
+            <div id="chat-messages"></div>
+            <input id="chat-input" placeholder="Введите сообщение..." maxlength="50">
+        </div>
+
+        <div id="controls">
+            <div>
+                <div class="btn" id="left-btn">←</div>
+                <div class="btn" id="right-btn">→</div>
+            </div>
+            <div>
+                <div style="display:flex; gap:5px;">
+                    <div class="btn" id="chat-btn" onclick="toggleChat()">💬</div>
+                    <div class="btn" id="build-btn" onclick="toggleBuild()">🏗️</div>
+                </div>
+                <div style="display:flex; gap:10px;">
+                    <div class="btn" id="gas-btn">↑</div>
+                    <div class="btn" id="back-btn">↓</div>
+                    <div class="btn" id="fire-btn">⚔️</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="death-screen">
+            <div>💀 ТЫ УМЕР 💀</div>
+            <div id="restart-btn" onclick="restartGame()">⟲ ЗАНОВО</div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // ====================== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ======================
+        const socket = new WebSocket('wss://' + window.location.host);
+        
+        let scene, camera, renderer, player;
+        let players = new Map(); // другие игроки
+        let zombies = [];
+        let buildings = [];
+        
+        let hp = 100;
+        let maxHp = 100;
+        let hunger = 100;
+        let dayCount = 1;
+        let timeOfDay = 12;
+        let dayTime = true;
+        
+        let inventory = new Array(10).fill(null).map(() => ({ item: null, count: 0 }));
+        let selectedSlot = 0;
+        
+        let playerId = null;
+        let playerName = 'Игрок_' + Math.floor(Math.random() * 1000);
+        
+        let keys = { g: 0, b: 0, left: 0, right: 0 };
+        let speed = 0;
+        let cameraRot = 0;
+        const MAP_SIZE = 300;
+        
+        // Предметы
+        const items = {
+            'wood': { name: 'Дерево', emoji: '🪵', stack: 99 },
+            'nails': { name: 'Гвозди', emoji: '📌', stack: 99 },
+            'bottle': { name: 'Бутылка', emoji: '🍾', stack: 50 },
+            'gasoline': { name: 'Бензин', emoji: '⛽', stack: 50 },
+            'bandage': { name: 'Бинт', emoji: '🩹', stack: 50 },
+            'alcohol': { name: 'Спирт', emoji: '🧪', stack: 50 },
+            'can': { name: 'Консервы', emoji: '🥫', stack: 50 },
+            'bat': { name: 'Бита', emoji: '🪓', stack: 1, damage: 30 },
+            'molotov': { name: 'Молотов', emoji: '🔥', stack: 5, damage: 50 },
+            'medkit': { name: 'Аптечка', emoji: '💊', stack: 5, heal: 50 },
+            'shotgun': { name: 'Дробовик', emoji: '🔫', stack: 1, damage: 100 },
+            'rifle': { name: 'Автомат', emoji: '🔥', stack: 1, damage: 20, rapid: true },
+            'chainsaw': { name: 'Бензопила', emoji: '⛓️', stack: 1, damage: 40, continuous: true },
+            'wall': { name: 'Стена', emoji: '🧱', stack: 10 },
+            'trap': { name: 'Ловушка', emoji: '⚡', stack: 10 },
+            'farm': { name: 'Ферма', emoji: '🌱', stack: 5 },
+            'turret': { name: 'Турель', emoji: '🔫', stack: 3 }
+        };
+        
+        // Рецепты крафта
+        const recipes = {
+            'bat': { wood: 2, nails: 1 },
+            'molotov': { bottle: 1, gasoline: 1 },
+            'medkit': { bandage: 2, alcohol: 1 },
+            'shotgun': { wood: 10, nails: 5, gasoline: 2 },
+            'rifle': { wood: 15, nails: 8, gasoline: 3 },
+            'chainsaw': { wood: 20, nails: 10, gasoline: 5 },
+            'wall': { wood: 5 },
+            'trap': { wood: 3, nails: 2 },
+            'farm': { wood: 10, nails: 5 },
+            'turret': { wood: 20, nails: 10, gasoline: 5 }
+        };
+
+        // ====================== ИНИЦИАЛИЗАЦИЯ ======================
+        function initGame() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x87CEEB);
+            
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            document.getElementById('game').appendChild(renderer.domElement);
+            
+            // Освещение
+            const sunLight = new THREE.DirectionalLight(0xffffff, 1);
+            sunLight.position.set(50, 100, 50);
+            sunLight.castShadow = true;
+            scene.add(sunLight);
+            scene.add(new THREE.AmbientLight(0x404060));
+            
+            // Земля
+            const groundGeo = new THREE.PlaneGeometry(600, 600);
+            const groundMat = new THREE.MeshLambertMaterial({ color: 0x2a5a2a });
+            const ground = new THREE.Mesh(groundGeo, groundMat);
+            ground.rotation.x = -Math.PI/2;
+            ground.position.y = -0.1;
+            ground.receiveShadow = true;
+            scene.add(ground);
+            
+            // База
+            const baseCircle = new THREE.Mesh(
+                new THREE.CylinderGeometry(20, 20, 0.1, 32),
+                new THREE.MeshBasicMaterial({ color: 0x00ff00, transparent: true, opacity: 0.2 })
+            );
+            baseCircle.position.y = 0.05;
+            scene.add(baseCircle);
+            
+            // Игрок
+            player = createPlayer(0x44aaff);
+            player.position.set(0, 0, 10);
+            scene.add(player);
+            
+            // Ресурсы
+            spawnResources();
+            
+            initInventory();
+            setupSocket();
+            animate();
+        }
+
+        function createPlayer(color) {
+            const group = new THREE.Group();
+            
+            // Голова
+            const head = new THREE.Mesh(
+                new THREE.BoxGeometry(0.8, 0.8, 0.8),
+                new THREE.MeshLambertMaterial({ color: 0xffcc99 })
+            );
+            head.position.y = 1.8;
+            head.castShadow = true;
+            group.add(head);
+            
+            // Тело
+            const body = new THREE.Mesh(
+                new THREE.BoxGeometry(0.8, 1.4, 0.4),
+                new THREE.MeshLambertMaterial({ color: color })
+            );
+            body.position.y = 0.9;
+            body.castShadow = true;
+            group.add(body);
+            
+            // Глаза
+            const eyeGeo = new THREE.BoxGeometry(0.15, 0.15, 0.1);
+            const eyeMat = new THREE.MeshLambertMaterial({ color: 0x000000 });
+            
+            const leftEye = new THREE.Mesh(eyeGeo, eyeMat);
+            leftEye.position.set(-0.2, 2.0, 0.4);
+            group.add(leftEye);
+            
+            const rightEye = new THREE.Mesh(eyeGeo, eyeMat);
+            rightEye.position.set(0.2, 2.0, 0.4);
+            group.add(rightEye);
+            
+            return group;
+        }
+
+        function createZombie(x, z, type = 'normal') {
+            const group = new THREE.Group();
+            
+            const types = {
+                'normal': { color: 0x44aa44, health: 50, speed: 0.03, damage: 10, scale: 1 },
+                'fat': { color: 0x228822, health: 120, speed: 0.02, damage: 20, scale: 1.3 },
+                'fast': { color: 0x88ff88, health: 30, speed: 0.08, damage: 8, scale: 0.9 },
+                'explosive': { color: 0xff5555, health: 40, speed: 0.04, damage: 15, scale: 1.1, explode: true }
+            };
+            
+            const t = types[type];
+            
+            // Тело
+            const body = new THREE.Mesh(
+                new THREE.BoxGeometry(0.8 * t.scale, 1.6 * t.scale, 0.4 * t.scale),
+                new THREE.MeshLambertMaterial({ color: t.color })
+            );
+            body.position.y = 0.8 * t.scale;
+            body.castShadow = true;
+            group.add(body);
+            
+            // Голова
+            const head = new THREE.Mesh(
+                new THREE.BoxGeometry(0.8 * t.scale, 0.8 * t.scale, 0.8 * t.scale),
+                new THREE.MeshLambertMaterial({ color: 0x88aa88 })
+            );
+            head.position.y = 1.8 * t.scale;
+            head.castShadow = true;
+            group.add(head);
+            
+            // Красные глаза
+            const eyeGeo = new THREE.BoxGeometry(0.15, 0.15, 0.1);
+            const eyeMat = new THREE.MeshLambertMaterial({ color: 0xff0000 });
+            
+            const leftEye = new THREE.Mesh(eyeGeo, eyeMat);
+            leftEye.position.set(-0.2 * t.scale, 2.0 * t.scale, 0.4 * t.scale);
+            group.add(leftEye);
+            
+            const rightEye = new THREE.Mesh(eyeGeo, eyeMat);
+            rightEye.position.set(0.2 * t.scale, 2.0 * t.scale, 0.4 * t.scale);
+            group.add(rightEye);
+            
+            group.position.set(x, 0, z);
+            
+            group.userData = {
+                id: Math.random().toString(36).substring(7),
+                type: type,
+                health: t.health,
+                maxHealth: t.health,
+                speed: t.speed,
+                damage: t.damage,
+                explode: t.explode || false,
+                attackCooldown: 0
+            };
+            
+            return group;
+        }
+
+        function createBuilding(type, x, z) {
+            const group = new THREE.Group();
+            
+            const colors = {
+                'wall': 0x8B4513,
+                'trap': 0x888888,
+                'farm': 0x7CFC00,
+                'turret': 0xFF4500
+            };
+            
+            if (type === 'wall') {
+                const wall = new THREE.Mesh(
+                    new THREE.BoxGeometry(2, 3, 1),
+                    new THREE.MeshLambertMaterial({ color: colors.wall })
+                );
+                wall.position.y = 1.5;
+                wall.castShadow = true;
+                wall.receiveShadow = true;
+                group.add(wall);
+            }
+            
+            if (type === 'trap') {
+                const base = new THREE.Mesh(
+                    new THREE.CylinderGeometry(1, 1, 0.2, 8),
+                    new THREE.MeshLambertMaterial({ color: colors.trap })
+                );
+                base.position.y = 0.1;
+                group.add(base);
+                
+                const spike = new THREE.Mesh(
+                    new THREE.ConeGeometry(0.3, 0.5, 8),
+                    new THREE.MeshLambertMaterial({ color: 0xaaaaaa })
+                );
+                spike.position.y = 0.5;
+                group.add(spike);
+            }
+            
+            if (type === 'farm') {
+                const soil = new THREE.Mesh(
+                    new THREE.BoxGeometry(2, 0.2, 2),
+                    new THREE.MeshLambertMaterial({ color: colors.farm })
+                );
+                soil.position.y = 0.1;
+                group.add(soil);
+                
+                for (let i = 0; i < 4; i++) {
+                    const plant = new THREE.Mesh(
+                        new THREE.ConeGeometry(0.2, 0.5, 8),
+                        new THREE.MeshLambertMaterial({ color: 0x7CFC00 })
+                    );
+                    plant.position.set((i % 2) * 0.5 - 0.25, 0.45, Math.floor(i / 2) * 0.5 - 0.25);
+                    group.add(plant);
+                }
+            }
+            
+            if (type === 'turret') {
+                const base = new THREE.Mesh(
+                    new THREE.CylinderGeometry(0.8, 0.8, 0.5, 8),
+                    new THREE.MeshLambertMaterial({ color: 0xC0C0C0 })
+                );
+                base.position.y = 0.25;
+                group.add(base);
+                
+                const top = new THREE.Mesh(
+                    new THREE.BoxGeometry(0.6, 0.4, 0.6),
+                    new THREE.MeshLambertMaterial({ color: colors.turret })
+                );
+                top.position.y = 0.7;
+                group.add(top);
+                
+                const barrel = new THREE.Mesh(
+                    new THREE.CylinderGeometry(0.1, 0.1, 1, 6),
+                    new THREE.MeshLambertMaterial({ color: 0x333333 })
+                );
+                barrel.rotation.x = Math.PI / 2;
+                barrel.position.set(0, 0.7, 0.5);
+                group.add(barrel);
+            }
+            
+            group.position.set(x, 0, z);
+            
+            group.userData = {
+                type: 'building',
+                buildingType: type,
+                id: Math.random().toString(36).substring(7),
+                health: 100
+            };
+            
+            return group;
+        }
+
+        // ====================== ИНВЕНТАРЬ ======================
+        function initInventory() {
+            const container = document.getElementById('inventory');
+            container.innerHTML = '';
+            
+            for (let i = 0; i < 10; i++) {
+                const slot = document.createElement('div');
+                slot.className = 'slot' + (i === selectedSlot ? ' selected' : '');
+                
+                if (inventory[i].item) {
+                    const item = items[inventory[i].item];
+                    slot.innerHTML = `
+                        <span>${item.emoji}</span>
+                        <span class="slot-count">${inventory[i].count}</span>
+                    `;
+                } else {
+                    slot.innerHTML = '<span>⬜</span>';
+                }
+                
+                slot.onclick = () => selectSlot(i);
+                container.appendChild(slot);
+            }
+        }
+
+        function selectSlot(index) {
+            selectedSlot = index;
+            initInventory();
+        }
+
+        function addToInventory(item, count = 1) {
+            for (let i = 0; i < 10; i++) {
+                if (inventory[i].item === item && inventory[i].count < (items[item]?.stack || 1)) {
+                    inventory[i].count += count;
+                    initInventory();
+                    return true;
+                }
+            }
+            
+            for (let i = 0; i < 10; i++) {
+                if (inventory[i].item === null) {
+                    inventory[i].item = item;
+                    inventory[i].count = count;
+                    initInventory();
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function removeFromInventory(item, count = 1) {
+            for (let i = 0; i < 10; i++) {
+                if (inventory[i].item === item) {
+                    inventory[i].count -= count;
+                    if (inventory[i].count <= 0) {
+                        inventory[i].item = null;
+                        inventory[i].count = 0;
+                    }
+                    initInventory();
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        // ====================== КРАФТ И ПОСТРОЙКИ ======================
+        window.craftItem = function(recipeName) {
+            const recipe = recipes[recipeName];
+            if (!recipe) return;
+            
+            // Проверяем ресурсы
+            for (let [res, need] of Object.entries(recipe)) {
+                let total = 0;
+                for (let i = 0; i < 10; i++) {
+                    if (inventory[i].item === res) total += inventory[i].count;
+                }
+                if (total < need) return;
+            }
+            
+            // Забираем ресурсы
+            for (let [res, need] of Object.entries(recipe)) {
+                removeFromInventory(res, need);
+            }
+            
+            // Добавляем результат
+            addToInventory(recipeName, 1);
+            
+            socket.send(JSON.stringify({
+                type: 'craft',
+                item: recipeName
+            }));
+        };
+
+        window.buildItem = function(buildingType) {
+            if (!player) return;
+            
+            const recipe = recipes[buildingType];
+            if (!recipe) return;
+            
+            // Проверяем ресурсы
+            for (let [res, need] of Object.entries(recipe)) {
+                let total = 0;
+                for (let i = 0; i < 10; i++) {
+                    if (inventory[i].item === res) total += inventory[i].count;
+                }
+                if (total < need) return;
+            }
+            
+            // Забираем ресурсы
+            for (let [res, need] of Object.entries(recipe)) {
+                removeFromInventory(res, need);
+            }
+            
+            // Создаём постройку перед игроком
+            const x = player.position.x + Math.sin(player.rotation.y) * 5;
+            const z = player.position.z + Math.cos(player.rotation.y) * 5;
+            
+            const building = createBuilding(buildingType, x, z);
+            scene.add(building);
+            buildings.push(building);
+            
+            socket.send(JSON.stringify({
+                type: 'build',
+                buildingType: buildingType,
+                id: building.userData.id,
+                x: x,
+                z: z
+            }));
+        };
+
+        // ====================== ЧАТ ======================
+        window.toggleChat = function() {
+            const chat = document.getElementById('chat-container');
+            chat.style.display = chat.style.display === 'none' ? 'block' : 'none';
+        };
+
+        window.toggleBuild = function() {
+            const build = document.getElementById('build-menu');
+            build.style.display = build.style.display === 'none' ? 'block' : 'none';
+        };
+
+        document.getElementById('chat-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const msg = e.target.value.trim();
+                if (msg) {
+                    socket.send(JSON.stringify({
+                        type: 'chat',
+                        message: msg,
+                        name: playerName
+                    }));
+                    e.target.value = '';
+                }
+            }
+        });
+
+        function addChatMessage(name, msg) {
+            const container = document.getElementById('chat-messages');
+            const div = document.createElement('div');
+            div.className = 'chat-message';
+            div.innerHTML = `<b>${name}:</b> ${msg}`;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // ====================== МУЛЬТИПЛЕЕР ======================
+        function setupSocket() {
+            socket.onopen = () => {
+                console.log('Connected to server');
+                socket.send(JSON.stringify({
+                    type: 'join',
+                    name: playerName,
+                    x: 0,
+                    z: 10,
+                    rot: 0
+                }));
+            };
+            
+            socket.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                
+                switch(data.type) {
+                    case 'init':
+                        playerId = data.id;
+                        break;
+                        
+                    case 'player_join':
+                        if (data.id !== playerId && !players.has(data.id)) {
+                            const newPlayer = createPlayer(0xff44ff);
+                            newPlayer.position.set(data.x, 0, data.z);
+                            newPlayer.rotation.y = data.rot;
+                            scene.add(newPlayer);
+                            players.set(data.id, newPlayer);
+                        }
+                        break;
+                        
+                    case 'player_move':
+                        if (players.has(data.id)) {
+                            const p = players.get(data.id);
+                            p.position.x = data.x;
+                            p.position.z = data.z;
+                            p.rotation.y = data.rot;
+                        }
+                        break;
+                        
+                    case 'player_left':
+                        if (players.has(data.id)) {
+                            scene.remove(players.get(data.id));
+                            players.delete(data.id);
+                        }
+                        break;
+                        
+                    case 'zombie_spawn':
+                        const zombie = createZombie(data.x, data.z, data.type);
+                        zombie.userData.id = data.id;
+                        scene.add(zombie);
+                        zombies.push(zombie);
+                        updateZombieCount();
+                        break;
+                        
+                    case 'zombie_hit':
+                        const z = zombies.find(z => z.userData.id === data.id);
+                        if (z) {
+                            z.userData.health = data.health;
+                            if (z.userData.health <= 0) {
+                                scene.remove(z);
+                                zombies = zombies.filter(z => z.userData.id !== data.id);
+                                updateZombieCount();
+                            }
+                        }
+                        break;
+                        
+                    case 'build':
+                        const building = createBuilding(data.buildingType, data.x, data.z);
+                        building.userData.id = data.id;
+                        scene.add(building);
+                        buildings.push(building);
+                        break;
+                        
+                    case 'chat':
+                        addChatMessage(data.name, data.message);
+                        break;
+                }
+            };
+        }
+
+        // ====================== АТАКА ======================
+        window.attack = function() {
+            if (!player) return;
+            
+            const weapon = inventory[selectedSlot].item;
+            let damage = 10; // кулаки
+            
+            if (weapon && items[weapon] && items[weapon].damage) {
+                damage = items[weapon].damage;
+                
+                if (weapon === 'medkit') {
+                    hp = Math.min(maxHp, hp + 50);
+                    document.getElementById('hp-fill').style.width = (hp / maxHp * 100) + '%';
+                    removeFromInventory('medkit', 1);
+                    return;
+                }
+            }
+            
+            // Проверяем попадание по зомби
+            zombies.forEach(zombie => {
+                const dist = player.position.distanceTo(zombie.position);
+                if (dist < 3) {
+                    zombie.userData.health -= damage;
+                    
+                    socket.send(JSON.stringify({
+                        type: 'zombie_hit',
+                        id: zombie.userData.id,
+                        health: zombie.userData.health
+                    }));
+                    
+                    if (zombie.userData.health <= 0) {
+                        scene.remove(zombie);
+                        
+                        if (zombie.userData.explode) {
+                            // Взрыв
+                            zombies.forEach(z => {
+                                if (z.position.distanceTo(zombie.position) < 5) {
+                                    z.userData.health -= 30;
+                                }
+                            });
+                        }
+                        
+                        // Шанс выпадения ресурса
+                        if (Math.random() < 0.3) {
+                            addToInventory('can', 1);
+                        }
+                    }
+                }
+            });
+        };
+
+        // ====================== ИГРОВОЙ ЦИКЛ ======================
+        function updateZombies() {
+            if (!player) return;
+            
+            // Спавн зомби ночью
+            if (!dayTime && zombies.length < 20 + dayCount * 5) {
+                if (Math.random() < 0.02) {
+                    const types = ['normal', 'fat', 'fast', 'explosive'];
+                    const type = types[Math.floor(Math.random() * types.length)];
+                    
+                    const angle = Math.random() * Math.PI * 2;
+                    const dist = 40 + Math.random() * 60;
+                    const x = player.position.x + Math.cos(angle) * dist;
+                    const z = player.position.z + Math.sin(angle) * dist;
+                    
+                    const zombie = createZombie(x, z, type);
+                    scene.add(zombie);
+                    zombies.push(zombie);
+                    
+                    socket.send(JSON.stringify({
+                        type: 'zombie_spawn',
+                        id: zombie.userData.id,
+                        x: x,
+                        z: z,
+                        type: type
+                    }));
+                    
+                    updateZombieCount();
+                }
+            }
+            
+            // Движение зомби к игрокам
+            zombies.forEach(zombie => {
+                if (!zombie.parent) return;
+                
+                // Ищем ближайшего игрока
+                let closestDist = 1000;
+                let target = player;
+                
+                players.forEach(p => {
+                    const dist = zombie.position.distanceTo(p.position);
+                    if (dist < closestDist) {
+                        closestDist = dist;
+                        target = p;
+                    }
+                });
+                
+                const selfDist = zombie.position.distanceTo(player.position);
+                if (selfDist < closestDist) {
+                    closestDist = selfDist;
+                    target = player;
+                }
+                
+                if (closestDist < 30) {
+                    const dx = target.position.x - zombie.position.x;
+                    const dz = target.position.z - zombie.position.z;
+                    const angle = Math.atan2(dx, dz);
+                    
+                    zombie.rotation.y = angle;
+                    zombie.position.x += Math.sin(angle) * zombie.userData.speed;
+                    zombie.position.z += Math.cos(angle) * zombie.userData.speed;
+                    
+                    if (closestDist < 2 && target === player) {
+                        const now = Date.now();
+                        if (now - zombie.userData.attackCooldown > 1000) {
+                            hp -= zombie.userData.damage;
+                            document.getElementById('hp-fill').style.width = (hp / maxHp * 100) + '%';
+                            zombie.userData.attackCooldown = now;
+                            
+                            if (hp <= 0) {
+                                document.getElementById('death-screen').style.display = 'flex';
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateResources() {
+            // Тут можно добавить спавн ресурсов
+        }
+
+        function updateDayNight() {
+            timeOfDay += 0.001;
+            
+            if (timeOfDay >= 24) {
+                timeOfDay = 0;
+                dayCount++;
+            }
+            
+            dayTime = timeOfDay >= 6 && timeOfDay < 20;
+            
+            const timeStr = Math.floor(timeOfDay) + ':' + 
+                           Math.floor((timeOfDay % 1) * 60).toString().padStart(2, '0');
+            document.getElementById('day-night').innerHTML = 
+                (dayTime ? '☀️' : '🌙') + ` ДЕНЬ ${dayCount} | ${timeStr}`;
+            
+            if (scene) {
+                scene.background.setHex(dayTime ? 0x87CEEB : 0x111122);
+            }
+        }
+
+        function updateHunger() {
+            hunger -= 0.001;
+            
+            if (hunger <= 0) {
+                hp -= 0.1;
+                document.getElementById('hp-fill').style.width = (hp / maxHp * 100) + '%';
+                hunger = 0;
+            }
+            
+            if (hunger < 30) {
+                for (let i = 0; i < 10; i++) {
+                    if (inventory[i].item === 'can') {
+                        inventory[i].count--;
+                        if (inventory[i].count <= 0) {
+                            inventory[i].item = null;
+                        }
+                        hunger = Math.min(100, hunger + 30);
+                        initInventory();
+                        break;
+                    }
+                }
+            }
+            
+            document.getElementById('hunger-fill').style.width = hunger + '%';
+            document.getElementById('hunger-text').innerHTML = Math.floor(hunger);
+        }
+
+        function updateZombieCount() {
+            document.getElementById('zombie-count').innerHTML = '🧟 ' + zombies.length;
+        }
+
+        function spawnResources() {
+            const types = ['wood', 'nails', 'bottle', 'gasoline', 'bandage', 'alcohol', 'can'];
+            
+            for (let i = 0; i < 30; i++) {
+                const x = (Math.random() - 0.5) * 500;
+                const z = (Math.random() - 0.5) * 500;
+                
+                if (Math.sqrt(x*x + z*z) > 25) {
+                    const type = types[Math.floor(Math.random() * types.length)];
+                    const resource = createResource(x, z, type);
+                    scene.add(resource);
+                }
+            }
+        }
+
+        function createResource(x, z, type) {
+            const group = new THREE.Group();
+            
+            const colors = {
+                'wood': 0x8B4513,
+                'nails': 0xC0C0C0,
+                'bottle': 0x00FF00,
+                'gasoline': 0xFFA500,
+                'bandage': 0xFFFFFF,
+                'alcohol': 0x87CEEB,
+                'can': 0xFFD700
+            };
+            
+            const box = new THREE.Mesh(
+                new THREE.BoxGeometry(0.8, 0.8, 0.8),
+                new THREE.MeshLambertMaterial({ color: colors[type] || 0xCCCCCC })
+            );
+            box.position.y = 0.4;
+            box.castShadow = true;
+            group.add(box);
+            
+            group.position.set(x, 0, z);
+            
+            group.userData = {
+                type: 'resource',
+                itemType: type,
+                id: Math.random().toString(36).substring(7)
+            };
+            
+            return group;
+        }
+
+        // ====================== УПРАВЛЕНИЕ ======================
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            if (!player) return;
+            
+            updateDayNight();
+            updateHunger();
+            updateZombies();
+            
+            // Движение
+            if (keys.left) player.rotation.y += 0.05;
+            if (keys.right) player.rotation.y -= 0.05;
+            
+            if (keys.g) speed += 0.04;
+            else if (keys.b) speed -= 0.02;
+            else speed *= 0.9;
+            
+            speed = Math.max(-0.2, Math.min(0.4, speed));
+            
+            const prevX = player.position.x;
+            const prevZ = player.position.z;
+            
+            player.position.x += Math.sin(player.rotation.y) * speed;
+            player.position.z += Math.cos(player.rotation.y) * speed;
+            
+            // Границы
+            player.position.x = Math.max(-MAP_SIZE + 10, Math.min(MAP_SIZE - 10, player.position.x));
+            player.position.z = Math.max(-MAP_SIZE + 10, Math.min(MAP_SIZE - 10, player.position.z));
+            
+            // Отправка позиции
+            if (socket.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify({
+                    type: 'move',
+                    x: player.position.x,
+                    z: player.position.z,
+                    rot: player.rotation.y
+                }));
+            }
+            
+            // Камера
+            camera.position.x = player.position.x - Math.sin(cameraRot) * 15;
+            camera.position.y = player.position.y + 8;
+            camera.position.z = player.position.z - Math.cos(cameraRot) * 15;
+            camera.lookAt(player.position.x, player.position.y + 1, player.position.z);
+            
+            renderer.render(scene, camera);
+        }
+
+        // ====================== ЗАПУСК ======================
+        window.onload = () => {
+            initGame();
+            
+            // Управление
+            document.getElementById('left-btn').ontouchstart = (e) => { e.preventDefault(); keys.left = 1; };
+            document.getElementById('left-btn').ontouchend = () => keys.left = 0;
+            
+            document.getElementById('right-btn').ontouchstart = (e) => { e.preventDefault(); keys.right = 1; };
+            document.getElementById('right-btn').ontouchend = () => keys.right = 0;
+            
+            document.getElementById('gas-btn').ontouchstart = (e) => { e.preventDefault(); keys.g = 1; };
+            document.getElementById('gas-btn').ontouchend = () => keys.g = 0;
+            
+            document.getElementById('back-btn').ontouchstart = (e) => { e.preventDefault(); keys.b = 1; };
+            document.getElementById('back-btn').ontouchend = () => keys.b = 0;
+            
+            document.getElementById('fire-btn').ontouchstart = (e) => { 
+                e.preventDefault(); 
+                attack();
+            };
+        };
+
+        window.restartGame = function() {
+            document.getElementById('death-screen').style.display = 'none';
+            hp = maxHp;
+            hunger = 100;
+            document.getElementById('hp-fill').style.width = '100%';
+            document.getElementById('hunger-fill').style.width = '100%';
+            player.position.set(0, 0, 10);
+        };
+    </script>
+</body>
+  </html>
